@@ -18,6 +18,14 @@ export function linePrice(line: OrderLine): number {
   return line.quantity >= BULK_QUANTITY ? Math.round(full * (1 - BULK_DISCOUNT)) : full
 }
 
-export function priceOrder(lines: OrderLine[]): number {
-  return lines.reduce((sum, line) => sum + linePrice(line), 0)
+/** Loyal customers get 10% off the whole order, after any bulk discounts. */
+const LOYALTY_DISCOUNT = 0.1
+
+export interface PriceOptions {
+  loyal?: boolean
+}
+
+export function priceOrder(lines: OrderLine[], options: PriceOptions = {}): number {
+  const subtotal = lines.reduce((sum, line) => sum + linePrice(line), 0)
+  return options.loyal ? Math.round(subtotal * (1 - LOYALTY_DISCOUNT)) : subtotal
 }
