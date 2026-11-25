@@ -12,21 +12,33 @@ export interface Order {
   lines: OrderLine[]
   status: 'open' | 'paid' | 'shipped' | 'cancelled'
   totalCents: number
+  /** Loyal customers get the loyalty discount on the order total. */
+  loyal: boolean
+}
+
+export interface CreateOrderOptions {
+  loyal?: boolean
 }
 
 const orders = new Map<string, Order>()
 let nextId = 1
 
 /** Creates an order and holds stock for every line. */
-export function createOrder(customerId: string, lines: OrderLine[]): Order {
+export function createOrder(
+  customerId: string,
+  lines: OrderLine[],
+  options: CreateOrderOptions = {},
+): Order {
   if (lines.length === 0) throw new Error('An order needs at least one line')
+  const loyal = options.loyal === true
   for (const line of lines) reserveStock(line.sku, line.quantity)
   const order: Order = {
     id: `ord_${nextId++}`,
     customerId,
     lines,
     status: 'open',
-    totalCents: priceOrder(lines),
+    totalCents: priceOrder(lines, { loyal }),
+    loyal,
   }
   orders.set(order.id, order)
   return order
